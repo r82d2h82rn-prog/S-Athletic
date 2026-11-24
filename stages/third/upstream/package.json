@@ -1,0 +1,13 @@
+{
+  "name": "k-sasuke",
+  "version": "4.8.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test-back-kick.mjs && node test-hit-targets.mjs && node test-burst-geometry.mjs && node test-cliff-pole.mjs && node test-edge-fall.mjs && node test-reference.mjs && node test-physics.mjs && node test.mjs && node test-burst-pipe.mjs && node test-controls.mjs && node test-motion.mjs && node test-3d.mjs && node smoke-3d.mjs"
+  },
+  "dependencies": {
+    "three": "0.180.0"
+  }
+}

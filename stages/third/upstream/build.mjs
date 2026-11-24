@@ -1,0 +1,13 @@
+import {readFile,mkdir,writeFile,copyFile} from 'node:fs/promises';
+await mkdir(new URL('dist/vendor/',import.meta.url),{recursive:true});
+let html=await readFile(new URL('src/template.html',import.meta.url),'utf8');
+const app=await readFile(new URL('src/app.js',import.meta.url),'utf8');
+html=html.replace('/* APP */',()=>app);
+await writeFile(new URL('dist/index.html',import.meta.url),html);
+for(const name of ['hit-targets.mjs','burst.mjs','collision.mjs','controls.mjs','course.mjs','motion.mjs','engine.mjs','render.js'])await copyFile(new URL('src/'+name,import.meta.url),new URL('dist/'+name,import.meta.url));
+for(const name of ['three.module.js','three.core.js'])await copyFile(new URL('node_modules/three/build/'+name,import.meta.url),new URL('dist/vendor/'+name,import.meta.url));
+let renderer=await readFile(new URL('dist/render.js',import.meta.url),'utf8');
+renderer=renderer.replace("from 'three'","from './vendor/three.module.js'");
+await writeFile(new URL('dist/render.js',import.meta.url),renderer);
+await copyFile(new URL('node_modules/three/LICENSE',import.meta.url),new URL('dist/vendor/LICENSE-three.txt',import.meta.url));
+console.log('Built 3D game with locally bundled Three.js (no CDN at runtime).');

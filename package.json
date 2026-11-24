@@ -1,0 +1,15 @@
+{
+  "name": "s-athletic",
+  "version": "9.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && node --test tests/*.test.mjs && node scripts/test-third.mjs",
+    "dev": "node build.mjs && node server.mjs dist",
+    "test:third": "node scripts/test-third.mjs"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
+}

@@ -1,0 +1,5 @@
+// Audio adapter only; the archived 3rd gameplay source stays unchanged.
+sound=true;
+beep=function(f=440,d=.08,type='sine'){gameAudio.tone(f,d,type);};
+$('#sound').hidden=true;
+$('#sound').onclick=null;

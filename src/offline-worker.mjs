@@ -1,0 +1,18 @@
+// Replaced with a content-versioned manifest by the build.
+const VERSION=__OFFLINE_VERSION__,ASSETS=__OFFLINE_ASSETS__;
+const PREFIX='n-athletic-offline-',CACHE=PREFIX+VERSION,paths=new Set(ASSETS);
+let preparing=null;
+async function notify(data){for(const client of await self.clients.matchAll({includeUncontrolled:true,type:'window'}))client.postMessage({type:'OFFLINE_STATUS',version:VERSION,...data});}
+async function status(){const cache=await caches.open(CACHE),keys=new Set((await cache.keys()).map(k=>new URL(k.url).pathname)),saved=ASSETS.filter(p=>keys.has(p)).length;return{state:saved===ASSETS.length?'ready':'idle',saved,total:ASSETS.length};}
+function prepare(){if(preparing)return preparing;preparing=(async()=>{const cache=await caches.open(CACHE),existing=new Set((await cache.keys()).map(r=>new URL(r.url).pathname));let saved=ASSETS.filter(p=>existing.has(p)).length;await notify({state:'saving',saved,total:ASSETS.length});const pending=ASSETS.filter(p=>!existing.has(p));let next=0;
+ const results=await Promise.allSettled(Array.from({length:4},async()=>{while(next<pending.length){const path=pending[next++],response=await fetch(new Request(path,{cache:'reload',credentials:'same-origin'}));if(response.status!==200)throw Error('保存できませんでした: '+path);await cache.put(path,response);saved++;await notify({state:'saving',saved,total:ASSETS.length});}}));const failure=results.find(r=>r.status==='rejected');if(failure)throw failure.reason;await notify(await status());})().catch(async error=>{await notify({...(await status()),state:'error',message:String(error.message||error)});throw error;}).finally(()=>preparing=null);return preparing;}
+self.addEventListener('install',event=>event.waitUntil(prepare()));
+self.addEventListener('activate',event=>event.waitUntil((async()=>{await self.clients.claim();for(const name of await caches.keys())if(name.startsWith(PREFIX)&&name!==CACHE)await caches.delete(name);await notify(await status());})()));
+self.addEventListener('message',event=>{if(event.data?.type==='PREPARE_OFFLINE')event.waitUntil(prepare().catch(()=>{}));else if(event.data?.type==='GET_OFFLINE_STATUS')event.waitUntil(status().then(data=>event.source?.postMessage({type:'OFFLINE_STATUS',version:VERSION,...data})));});
+async function rangeResponse(request,response){const range=request.headers.get('Range');if(!range)return response;const bytes=await response.arrayBuffer(),length=bytes.byteLength,m=/^bytes=(\d*)-(\d*)$/.exec(range);let start=0,end=length-1;
+ if(!m||(!m[1]&&!m[2]))return new Response(null,{status:416,headers:{'Content-Range':`bytes */${length}`}});
+ if(m[1]){start=Number(m[1]);if(m[2])end=Math.min(end,Number(m[2]));}else start=Math.max(0,length-Number(m[2]));
+ if(!length||start>=length||start>end)return new Response(null,{status:416,headers:{'Content-Range':`bytes */${length}`}});
+ const headers=new Headers(response.headers);headers.set('Accept-Ranges','bytes');headers.set('Content-Range',`bytes ${start}-${end}/${length}`);headers.set('Content-Length',String(end-start+1));return new Response(bytes.slice(start,end+1),{status:206,headers});}
+self.addEventListener('fetch',event=>{const request=event.request,url=new URL(request.url);if(request.method!=='GET'||url.origin!==self.location.origin)return;let path=url.pathname;if(path.endsWith('/index.html'))path=path.slice(0,-10);if(['/first','/second','/third','/final'].includes(path))path+='/';if(!paths.has(path))return;
+ event.respondWith((async()=>{const cache=await caches.open(CACHE),cached=await cache.match(path);if(cached)return rangeResponse(request,cached);try{return await fetch(request);}catch{return new Response('オフライン用データがありません。接続して保存を完了してください。',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});}})());});

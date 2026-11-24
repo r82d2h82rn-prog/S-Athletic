@@ -1,0 +1,12 @@
+// Appended to the generated HTML; archived 3rd source remains unchanged.
+const cupMode=cupContext('third');
+if(cupMode?.invalid)location.replace('/');
+if(cupMode&&!cupMode.invalid){
+ const originalStart=start,originalResult=result,originalSync=sync;
+ sync=function(){originalSync();cupMode.checkpoint?.({area:g.stage,areaName:g.s.name,progress:g.progress,time:g.total});$('#modeLabel').textContent='ガチSASUKE / 3rd / EXPERT';};let cupStarted=false;
+ start=function(stage=0,practice=false){if(cupStarted||practice||stage!==0)return;cupStarted=true;g.mode='expert';originalStart(0,false);};
+ home=function(){location.assign('/');};practiceMenu=function(){};
+ $('#course').hidden=true;$('#course').onclick=null;
+ result=function(){originalResult();cupMode.finish(g.status==='complete',g.total,g.reason,{area:g.stage,areaName:g.s.name,progress:g.progress});const row=$('#overlay .btnrow');if(row){row.innerHTML=g.status==='complete'?'<button class="primary" id="cupNext">FINALへ進む ↗</button><a class="secondary" href="/">ステージ選択</a>':'<button class="primary" id="cupRestart">1stから再挑戦 ↗</button><a class="secondary" href="/">ステージ選択</a>';const again=$('#cupRestart');if(again)again.onclick=()=>cupMode.restart();const next=$('#cupNext');if(next)next.onclick=()=>cupMode.next();}};
+ start(0,false);
+}

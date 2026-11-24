@@ -1,0 +1,3 @@
+/* Disable double-tap page zoom without disabling deliberate pinch zoom in menus. */
+html,body,button,a,select{touch-action:manipulation}
+#controls button,#controls button *,#playControls button,#playControls button *,[data-action],[data-action] *{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
